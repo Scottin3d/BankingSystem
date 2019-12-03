@@ -1,13 +1,15 @@
+//
+// Scott Shilrey 0760484 30 November 2019
+// CSS3422 Assignment 5
+//
 
 #include "bank.h"
+
+#include <fstream>
 #include <iostream>
 #include <string>
-#include <fstream>
 
-
-//using namespace std;
-
-int main(int Argc, char *Argv[]) {
+int main() {
 
 	std::string FileName = "BankTransIn.txt";
 	//inFile.open("BankTransIn.txt");
@@ -15,12 +17,20 @@ int main(int Argc, char *Argv[]) {
     //Note that tests were d
 	//one in BankTransIn.txt
 	Bank.queueTransactions(FileName);
+
+	std::cout << Bank.BankProcesses.size() << " transactions queued from " << FileName << "\n";
+
+	//process transactions in the queue
 	while (!Bank.BankProcesses.empty()) {
-		//std::cout << Bank.BankProcesses.front() << "\n";
+
 		Bank.processTransactions(Bank.BankProcesses.front());
 		Bank.BankProcesses.pop();
-		std::cout << "\n";
 	}
-	std::cin.get();
+
+	//display all accoint balances
+	Bank.displayAllBankBalances();
+
+	//vs window open
+	//std::cin.get();
     return 0;
 }

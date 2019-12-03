@@ -1,185 +1,243 @@
+//
+// Scott Shilrey 0760484 30 November 2019
+// CSS3422 Assignment 5
+//
 
 #include "bank.h"
-//#include "accounttree.h"
-//#include "account.h"
 
-#include <vector>
-#include <string>
 #include <iostream>
-#include <sstream>
 #include <iterator>
 #include <queue>
+#include <sstream>
+#include <string>
+#include <vector>
 
+//constructor
+Bank::Bank() {
+	std::queue<std::string> BankProcesses;
+	Accounts = new AccountTree();
+	Tokens = new std::vector<std::string>;
+}
 
-Bank::Bank() = default;
+//destructor
+Bank::~Bank() {
+	Tokens->clear();
+	delete Tokens;
+	Accounts->clear();
+	delete Accounts;
+}
 
-Bank::~Bank() = default;
-
-void Bank::queueTransactions(std::string &FileInput){
+//queue all transactions from txt file
+void Bank::queueTransactions(const std::string &FileName){
 	ifstream InFile;
-	InFile.open(FileInput);
+	InFile.open(FileName);
 	if (!InFile) {
-		cout << "Unable to open file";
+		cout << "Unable to open file\n";
 		exit(1); // terminate with error
 	}
 	string Str;
 	getline(InFile, Str);
-	while (Str != "") {
+	while (!Str.empty()) {
 		BankProcesses.push(Str);
-		std::cout << "Queuing " << Str << "\n";
+		//std::cout << "Queuing " << Str << "\n";
 		getline(InFile, Str);
 	}
 }
 
+//process transaction
 void Bank::processTransactions(const string &FileName) {
     //string split
-    Tokens = Bank::tokenizeInput(FileName);  
+	tokenizeInput(FileName);\
 
     //variables
     //case is first token
-    int TransactionCase = findTransactionCase(Tokens.front());
-    int AccountNumber;
-    int TfrAccountNumber;
-    int FundIndex;
-    int TransactionAmount;
+	char TransCase = FileName.at(0);
 
-    switch (TransactionCase){
-		// "O" Open a client account with the appropriate funds
-		//ex: O Cash Johnny 1001
-		case 0: {
-			std::cout << FileName << "\n";
-			std::cout << "Open account selected.\n";
+	int AccountNumber = 0;
+    int FundIndex = 0;
+    int TfrTOAccountNumber = 0;
+	int TfrTOFundIndex = 0;
+    int TransactionAmount =0 ;
 
-			int NewAccountNumber = std::stoi(Tokens.at(3));
-			Account *NewAccount = new Account(Tokens.at(1), Tokens.at(2), NewAccountNumber);
-		
-			if (Accounts.insert(NewAccount)) {
-				//debug code
-				std::cout << "Account Created.\n";
-				std::cout << "Account Name: " << NewAccount->FirstName << " " << NewAccount->LastName << "\n";
-				std::cout << "Account Number: " << NewAccount->AccountNumber << "\n";
+		switch (TransCase) {
+			// "O" Open a client account with the appropriate funds
+			//ex: O Cash Johnny 1001
+		case 'O': {
+			//checks
+			//number of tokens
+			if (Tokens->size() == 4) {
+				//tokens
+				int NewAccountNumber = std::stoi(Tokens->at(3));
+
+				//create new account
+				auto *NewAccount = new Account(Tokens->at(2), Tokens->at(1), NewAccountNumber);
+
+				//try to insert new account into tree
+				if (!Accounts->insert(NewAccount)) {
+					std::cout << "ERROR: Account " << NewAccountNumber << " already open.\n";
+					delete NewAccount;
+				}
+
+				break;
 			}
-		/*
-				//checks:
-					//valid number pieces of info
-			if (Tokens.size() != 4)
-				//valid names
-				if (Tokens.at(1) != null && Tokens.at(2) != null)
-					//valid account ID, int XXXX
-					if (typeid(Tokens.back()) == typeid(int()) &&
-						Tokens.back() > 999 &&
-						Tokens.back() < 10000)
-
-						//create account
-						Account AddAccount = new Account(Tokens.at(1),
-							Tokens.at(2),
-							Tokens.at(3))
-						//add account to tree
-							//validate if this is koshure
-						if (!AccountTree.insert(*AddAccount)) {
-							//log error: account already exists
-							std::string Error = "Error: ";
-							Error += "Cound not find Account ";
-							Error += Tokens.back();
-							Error += " Account not opened."
-								GeneralAccountError.add(Error);
-							//delete AddAccount;
-						}
-		*/
+			//log error
+			std::cout << "Error. Invalid account info: " << FileName << "\n";
 			break;
 		}
+
 		//"D" Deposit assets into a fund
 		//D 10016 7576
-		case 1: {
-			std::cout << FileName << "\n";
-			std::cout << "Deposit selected.\n";
-			AccountNumber = std::stoi(Tokens.at(1).substr(0,4));
-			FundIndex = std::stoi(Tokens.at(1).substr(4));
-			TransactionAmount = std::stoi(Tokens.back());
+		case 'D': {
+			//tokens
+			AccountNumber = std::stoi(Tokens->at(1).substr(0, 4));
+			FundIndex = std::stoi(Tokens->at(1).substr(4));
+			TransactionAmount = std::stoi(Tokens->back());
 
-			//debug code
-			std::cout << "Account Number: " << AccountNumber << "\n";
-			std::cout << "Fund Index: " << FundIndex << "\n";
-			std::cout << "Deposit Amount: " << TransactionAmount << "\n";
-
-			/*
 			//checks
-				//valid account
-			if (typeid(Tokens.at(1)) == typeid(int()) &&
-				Tokens.at(1) > 9999 &&
-				Tokens.at(1) < 100000)
-				//valid amout
-				if (Tokens.back() >= 0)
+			if (Tokens->at(1).size() == 5 && Tokens->size() == 3) {
+				//retrieve account
+				Account *TransactionAccount = Accounts->retrieve(AccountNumber);
 
-					//deposit into account
-					Account* Account = AccountTree.retrieve(AccountNumber)
+				//try to make deposit
+				if (Accounts->retrieve(AccountNumber, TransactionAccount)) {
+					//these checks are useless with how the number is parsed
+					if (AccountNumber > 9999 || AccountNumber < 1000) {
+						break;
+					}
+
+					//make deposit into account
+					TransactionAccount->makeDeposit(FundIndex, TransactionAmount);
 					//record transaction
-					Account.recordTransactionHistory(FileInput, FundIndex, )
-			*/
+					TransactionAccount->recordTransaction(FileName, FundIndex);
+
+					break;
+				}
+				std::cout << "ERROR: Could not find account " << AccountNumber << "\n";
+				break;
+			}
+			std::cout << "ERROR: Invalid account number: " << Tokens->at(1) << "\n";
+
+			//log error 
+
 			break;
 		}
+
 		//"W" Withdraw assets from a fund
 		//W 10017 20000
-		case 2 : {
-			std::cout << FileName << "\n";
-			std::cout << "Withdraw selected.\n";
-			AccountNumber = std::stoi(Tokens.at(1).substr(4));
-			FundIndex = std::stoi(Tokens.at(1).substr(4, 5));
-			TransactionAmount = std::stoi(Tokens.back());
+		case 'W': {
+			//tokens
+			AccountNumber = std::stoi(Tokens->at(1).substr(0, 4));
+			FundIndex = std::stoi(Tokens->at(1).substr(4, 5));
+			TransactionAmount = std::stoi(Tokens->back());
 
-			//debug code
-			std::cout << "Account Number: " << AccountNumber << "\n";
-			std::cout << "Fund Index: " << FundIndex << "\n";
-			std::cout << "Deposit Amount: " << TransactionAmount << "\n";
+			if (Tokens->at(1).size() == 5 && Tokens->size() == 3) {
+
+				//retrieve account to withdraw in
+				Account *TransactionAccount = Accounts->retrieve(AccountNumber);
+
+				WithdrawReturn = TransactionAccount->makeWithdraw(FundIndex, TransactionAmount);
+				//try to withdraw, if not successful log error
+				if (!WithdrawReturn.first) {
+					//log error
+					std::string Error = FileName;
+					Error.erase(Error.length() - 1);
+					Error += " (Failed)";
+					TransactionAccount->recordTransaction(Error, WithdrawReturn.second);
+					break;
+				}
+				//record the successful transaction
+				TransactionAccount->recordTransaction(FileName, WithdrawReturn.second);
+
+				break;
+			}
+			//log error
+			std::cout << "ERROR: Invalid input: " << FileName << "\n";
 			break;
 		}
+				  
 		//"T" Transfer assets between funds
 		//(can be funds owned by a single client or
 		//transfers between clients)
-		case 3 : {
-			std::cout << FileName << "\n";
-			std::cout << "Transfer selected.\n";
-			AccountNumber = std::stoi(Tokens.at(1).substr(4));
-			FundIndex = std::stoi(Tokens.at(1).substr(4, 5));
-			TransactionAmount = std::stoi(Tokens.back());
+		//T 10017 54 10015
+		case 'T': {
+			//tokens
+			//FROM
+			AccountNumber = std::stoi(Tokens->at(1).substr(0, 4));
+			FundIndex = std::stoi(Tokens->at(1).substr(4));
+			//TO
+			TfrTOAccountNumber = std::stoi(Tokens->at(3).substr(0, 4));
+			TfrTOFundIndex = std::stoi(Tokens->at(3).substr(4));
+			//AMOUNT
+			TransactionAmount = std::stoi(Tokens->at(2));
 
-			//debug code
-			std::cout << "Account Number: " << AccountNumber << "\n";
-			std::cout << "Fund Index: " << FundIndex << "\n";
-			std::cout << "Deposit Amount: " << TransactionAmount << "\n";
+			if (Tokens->at(1).size() == 5 && Tokens->at(3).size() == 5 && Tokens->size() == 4) {
+
+				//retrieve accounts
+				Account* TfrFROMAccount = Accounts->retrieve(AccountNumber);
+				Account* TfrTOAccount = Accounts->retrieve(TfrTOAccountNumber);
+				//verify both accounts are same address
+				if (TfrFROMAccount != nullptr && TfrTOAccount != nullptr) {
+					//withdraw
+					TransferReturn = TfrFROMAccount->makeWithdraw(FundIndex, TransactionAmount);
+					if (!TransferReturn.first) {
+						std::string Error = FileName + " (Failed)";
+						Error.erase(Error.length() - 1);
+						Error += " (Transfer Failed)";
+						TfrFROMAccount->recordTransaction(Error, TransferReturn.second);
+						break;
+					}
+
+					//deposit
+					//if same account
+					if (AccountNumber == TfrTOAccountNumber) {
+						TfrFROMAccount->makeDeposit(TfrTOFundIndex, TransactionAmount);
+						TfrFROMAccount->recordTransaction("+ " + FileName, TfrTOFundIndex);
+					}
+					//account to account
+					else {
+						TfrTOAccount->makeDeposit(TfrTOFundIndex, TransactionAmount);
+						TfrTOAccount->recordTransaction("+ " + FileName, TfrTOFundIndex);
+					}
+					TfrTOAccount->recordTransaction("- " + FileName, FundIndex);
+				}
+				break;
+			}
+			//log error
+			std::cout << "ERROR: Invalid input: " << FileName << "\n";
 			break;
 		}
+				  
 		//H: Display the history of all transactions for a client
 		//account or for a single fund
-		case 4: {
-			std::cout << FileName << "\n";
-			std::cout << "Displaying all cases.\n";
-			//call AccountTree.display()
+		case 'H': {
+			AccountNumber = std::stoi(Tokens->at(1).substr(0, 4));
+			//retrieve account
+			Account* TransactionAccount = Accounts->retrieve(AccountNumber);
+			if (Accounts->retrieve(AccountNumber, TransactionAccount)) {
+				TransactionAccount->displayTransactionHistory(true);
+			}
 			break;
 		}
-		//Include errors in the output where appropriate.
-    }
+		default :
+			break;
+				  //Include errors in the output where appropriate.
+		}
 }
 
-void Bank::displayAllBankBalances() const {}
+//display all account balances in account tree
+void Bank::displayAllBankBalances() const {
+	std::cout << "Processing Done. Final Balances.\n";
+	Accounts->display();
+}
 
 
 //helper functions
-
 //tokenizes the input string
-std::vector<std::string> Bank::tokenizeInput(std::string Input){
-    std::istringstream buf(Input);
-    std::istream_iterator<std::string> beg(buf), end;
+void Bank::tokenizeInput(const std::string &FileName){
+    std::istringstream Buffer(FileName);
+    std::istream_iterator<std::string> Beginning(Buffer), End;
 
-    std::vector<std::string> Tokens(beg, end);
-    return Tokens;
-}
-
-//finds case for transaction processing
-int Bank::findTransactionCase(std::string InputCase) {
-	for (int I = 0; I < 5 - 1; I++) {
-		if (TransactionCases[I] == InputCase) {
-			return I;
-		}
-	}
+	Tokens->assign(Beginning, End);
+    //Tokens = new std::vector<std::string>(Beginning, End);
+    //return Tokens;
 }
