@@ -1,7 +1,7 @@
-READ.ME
-Author: Scott Shirley 0760484
-Designers: Erica Ferguson, Jace Yoon, Joseph Cho
-CSS342 Assignment 5 - Banking System and Data Structure
+READ.ME <br />
+Author: Scott Shirley 0760484 <br />
+Designers: Erica Ferguson, Jace Yoon, Joseph Cho <br />
+CSS342 Assignment 5 - Banking System and Data Structure <br />
 
 ## Assumptions
 -input is in correct format
@@ -23,7 +23,7 @@ A bank driver will queue "transactions" from a txt file, then process the
 the transactions in the order they were queued.  The data structure for this
 assignment is the Accout.  Accounts are stored in a basic binary search tree.
 
-##Bank 
+## Bank 
 The processing of the transactions was handled with a switch statment that used 
 the cue char at the beginning of the read line.  We decided to store each line in 
 the queue as a single string.  It wasn't until we processed the transaction that
@@ -47,7 +47,7 @@ In order to track whether or not the action was successful AND which acount,
 I made the return type a pair<bool, int>.  This way, using pair.first to check
 if the action was successful, then pair.second for the fund index to record the
 transaction in the transaction history.
-
+ 
 I used the same data type for transfers, and handled transfers as a withdraw ? deposit.
 
 ## AccountTree
