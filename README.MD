@@ -27,9 +27,9 @@ assignment is the Accout.  Accounts are stored in a basic binary search tree.
 The processing of the transactions was handled with a switch statment that used 
 the cue char at the beginning of the read line.  We decided to store each line in 
 the queue as a single string.  It wasn't until we processed the transaction that
-the string was broken down into token based on white space.  This was done after the 
+the string was broken down into tokens based on white space.  This was done after the 
 switch case was determined because the number of tokens would depend on the case.
-This made inout checking easy, because we know how many tokens each case should expect.
+This made error checking easy, because we know how many tokens each case should expect.
 If there were not enough tokens, it would fail and move on.
 
 Retrieving the accounts was probably the hardest part for me to figure out due to the
